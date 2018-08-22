@@ -32,6 +32,8 @@ $cfg['Servers'][$i]['host'] = 'localhost';
 $cfg['Servers'][$i]['compress'] = false;
 $cfg['Servers'][$i]['AllowNoPassword'] = false;
 
+$cfg['Servers'][$i]['alias'] = "server name";//数据库别名
+
 /**
  * phpMyAdmin configuration storage settings.
  */

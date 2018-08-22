@@ -89,6 +89,8 @@ class Select
                 $label .= '  (' . $server['user'] . ')';
             }
 
+            if(isset($server['alias'])) $label = $server['alias'];
+
             if ($list) {
                 $retval .= '<li>';
                 if ($selected) {
