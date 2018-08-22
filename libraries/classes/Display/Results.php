@@ -177,6 +177,8 @@ class Results
         'whereClauseMap' => array(),
     );
 
+    public $fields = [];
+
     /**
      * This variable contains the column transformation information
      * for some of the system databases.
@@ -1182,6 +1184,7 @@ class Results
         // optimize: avoid calling a method on each iteration
         $number_of_columns = $this->__get('fields_cnt');
 
+        $this->fields['fields'] = $fields_meta;
         for ($j = 0; $j < $number_of_columns; $j++) {
 
             // assign $i with the appropriate column order
@@ -2492,6 +2495,47 @@ class Results
         return implode(' ', $classes);
     } // end of the '_addClass()' function
 
+    private function intTimeToStr($time){
+        $usec = $time%1000;
+        $usec = sprintf("%03d", $usec);
+        $sec = $time/1000;
+        $date = date("Y-m-d H:i:s.x",$sec);
+        return str_replace('x', $usec, $date);
+    }
+
+    /**
+     * @param $row
+     * @return mixed
+     */
+    private function bigIntToTime($row){
+        static $parseResult = null;
+        if(isset($this->fields['fields'][0]->db)
+            && isset($this->fields['fields'][0]->table)){
+            $db = $this->fields['fields'][0]->db;
+            $table = $this->fields['fields'][0]->table;
+            $key = "$db.$table";
+            if(!isset($parseResult[$key])){
+                $parseResult[$key] = [];
+                foreach ($this->fields['fields'] as $index => $item){
+                    if(in_array($item->type,['int','bigint'])
+                        && preg_match('/time/',$item->name)){
+                        $parseResult[$key][] = $index;
+                    }
+                }
+            }
+            $indexList = $parseResult[$key];
+            $beginTime = -1;
+            $flag = false;
+            foreach ($indexList as $index){
+                if($row[$index] > $beginTime || $flag){
+                    $flag = true;
+                    $row[$index] = $this->intTimeToStr($row[$index]);
+                }
+            }
+        }
+        return $row;
+    }
+
     /**
      * Prepare the body of the results table
      *
@@ -2581,6 +2625,7 @@ class Results
         while ($row = $GLOBALS['dbi']->fetchRow($dt_result)) {
 
             // add repeating headers
+            $row = $this->bigIntToTime($row);
             if ((($row_no != 0) && ($_SESSION['tmpval']['repeat_cells'] != 0))
                 && !($row_no % $_SESSION['tmpval']['repeat_cells'])
             ) {

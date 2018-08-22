@@ -44,7 +44,7 @@ use PhpMyAdmin\Session;
 use PhpMyAdmin\ThemeManager;
 use PhpMyAdmin\Tracker;
 use PhpMyAdmin\Util;
-
+date_default_timezone_set('PRC');
 /**
  * block attempts to directly run this script
  */
