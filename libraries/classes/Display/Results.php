@@ -179,6 +179,8 @@ class Results
 
     public $fields = [];
 
+    public $modifyFieldsIndex = [];
+
     /**
      * This variable contains the column transformation information
      * for some of the system databases.
@@ -1176,6 +1178,21 @@ class Results
         // Prepare Display column comments if enabled
         // ($GLOBALS['cfg']['ShowBrowseComments']).
         $comments_map = $this->_getTableCommentsArray($analyzed_sql_results);
+
+        if(isset($fields_meta[0]->table)){
+            $table = $fields_meta[0]->table;
+            $key = "$table";
+            if(!isset($this->modifyFieldsIndex[$key])){
+                $this->modifyFieldsIndex[$key] = [];
+                foreach ($fields_meta as $index => $item){
+                    if(in_array($item->type,['int','bigint'])
+                        && preg_match('/time/',$item->name)){
+                        $this->modifyFieldsIndex[$key][] = $index;
+                        $comments_map[$table][$item->name] .= "\n【注意】为方便观看,以时间字符串展示,存储仍为int";
+                    }
+                }
+            }
+        }
 
         list($col_order, $col_visib) = $this->_getColumnParams(
             $analyzed_sql_results
@@ -2508,22 +2525,8 @@ class Results
      * @return mixed
      */
     private function bigIntToTime($row){
-        static $parseResult = null;
-        if(isset($this->fields['fields'][0]->db)
-            && isset($this->fields['fields'][0]->table)){
-            $db = $this->fields['fields'][0]->db;
-            $table = $this->fields['fields'][0]->table;
-            $key = "$db.$table";
-            if(!isset($parseResult[$key])){
-                $parseResult[$key] = [];
-                foreach ($this->fields['fields'] as $index => $item){
-                    if(in_array($item->type,['int','bigint'])
-                        && preg_match('/time/',$item->name)){
-                        $parseResult[$key][] = $index;
-                    }
-                }
-            }
-            $indexList = $parseResult[$key];
+        if(isset($this->modifyFieldsIndex[$this->fields['fields'][0]->table])){
+            $indexList = $this->modifyFieldsIndex[$this->fields['fields'][0]->table];
             $beginTime = -1;
             $flag = false;
             foreach ($indexList as $index){
