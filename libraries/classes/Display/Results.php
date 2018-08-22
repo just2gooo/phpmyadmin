@@ -2498,7 +2498,7 @@ class Results
     private function intTimeToStr($time){
         $usec = $time%1000;
         $usec = sprintf("%03d", $usec);
-        $sec = $time/1000;
+        $sec = intval($time/1000);
         $date = date("Y-m-d H:i:s.x",$sec);
         return str_replace('x', $usec, $date);
     }
